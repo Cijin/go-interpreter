@@ -7,43 +7,7 @@ import (
 	"github.com/cijin/go-interpreter/lexer"
 )
 
-func TestLetStatements(t *testing.T) {
-	input := `
-	let x = 5;
-	let y = 10;
-	let foobar = 838383;
-	`
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
-
-	if program == nil {
-		t.Fatal("ParsePorgram() returned nil")
-	}
-
-	if len(program.Statments) != 3 {
-		t.Fatalf("expected %d statements, got %d", 3, len(program.Statments))
-	}
-
-	tests := []struct {
-		expectedIdentifier string
-	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
-	}
-
-	for i, tt := range tests {
-		stmt := program.Statments[i]
-
-		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
-			return
-		}
-	}
-}
-
+// Helper method
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("token literal is not let, got %s", s.TokenLiteral())
@@ -68,6 +32,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	return true
 }
 
+// Helper method
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
@@ -79,4 +44,74 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error: %s", msg)
 	}
 	t.FailNow()
+}
+
+func TestLetStatements(t *testing.T) {
+	input := `
+	let x  5;
+	let y  10;
+	let foobar 838383;
+	`
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if program == nil {
+		t.Fatal("ParsePorgram() returned nil")
+	}
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("expected %d statements, got %d", 3, len(program.Statements))
+	}
+
+	tests := []struct {
+		expectedIdentifier string
+	}{
+		{"x"},
+		{"y"},
+		{"foobar"},
+	}
+
+	for i, tt := range tests {
+		stmt := program.Statements[i]
+
+		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+			return
+		}
+	}
+}
+
+func TestReturnStatements(t *testing.T) {
+	input := `
+	return 5;
+	return 10;
+	return 999893;
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if program == nil {
+		t.Fatal("ParseProgarm() returned nil")
+	}
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("expected %d statements, got %d", 3, len(program.Statements))
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("expected *ast.ReturnStatement, but got %T", returnStmt)
+		}
+
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("expected token literal 'return', but got %T", returnStmt.TokenLiteral())
+		}
+	}
 }
