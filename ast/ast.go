@@ -1,9 +1,14 @@
 package ast
 
-import "github.com/cijin/go-interpreter/token"
+import (
+	"bytes"
+
+	"github.com/cijin/go-interpreter/token"
+)
 
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 type Statement interface {
@@ -28,6 +33,16 @@ func (p *Program) TokenLiteral() string {
 	return ""
 }
 
+func (p *Program) String() string {
+	var buf bytes.Buffer
+
+	for _, s := range p.Statements {
+		buf.WriteString(s.String())
+	}
+
+	return buf.String()
+}
+
 type Identifier struct {
 	Token token.Token
 	Value string
@@ -35,6 +50,7 @@ type Identifier struct {
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
 
 // Let
 type LetStatement struct {
@@ -45,6 +61,21 @@ type LetStatement struct {
 
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
+func (ls *LetStatement) String() string {
+	var buf bytes.Buffer
+
+	buf.WriteString(ls.TokenLiteral() + " ")
+	buf.WriteString(ls.Name.TokenLiteral())
+	buf.WriteString(" = ")
+
+	if ls.Value != nil {
+		buf.WriteString(ls.Value.TokenLiteral())
+	}
+
+	buf.WriteString(";")
+
+	return buf.String()
+}
 
 // Return
 type ReturnStatement struct {
@@ -54,3 +85,35 @@ type ReturnStatement struct {
 
 func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
+func (rs *ReturnStatement) String() string {
+	var buf bytes.Buffer
+
+	buf.WriteString(rs.TokenLiteral() + " ")
+
+	if rs.ReturnValue != nil {
+		buf.WriteString(rs.ReturnValue.TokenLiteral())
+	}
+
+	buf.WriteString(";")
+
+	return buf.String()
+}
+
+// Wrapper around expressions
+type ExpresssionStatement struct {
+	Token      token.Token
+	Expression Expression
+}
+
+func (es *ExpresssionStatement) statementNode() {}
+func (es *ExpresssionStatement) TokenLiteral() string {
+	return es.Token.Literal
+}
+
+func (es *ExpresssionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+
+	return ""
+}
