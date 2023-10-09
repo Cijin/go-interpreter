@@ -10,12 +10,12 @@ import (
 // Helper method
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
-		t.Errorf("token literal is not let, got %s", s.TokenLiteral())
+		t.Errorf("token literal is not let, got=%s", s.TokenLiteral())
 	}
 
 	letStmt, ok := s.(*ast.LetStatement)
 	if !ok {
-		t.Errorf("expected *ast.LetStatment, but got %T", s)
+		t.Errorf("expected *ast.LetStatment, but got=%T", s)
 		return false
 	}
 
@@ -63,7 +63,7 @@ func TestLetStatements(t *testing.T) {
 	}
 
 	if len(program.Statements) != 3 {
-		t.Fatalf("expected %d statements, got %d", 3, len(program.Statements))
+		t.Fatalf("expected %d statements, got=%d", 3, len(program.Statements))
 	}
 
 	tests := []struct {
@@ -101,17 +101,49 @@ func TestReturnStatements(t *testing.T) {
 	}
 
 	if len(program.Statements) != 3 {
-		t.Fatalf("expected %d statements, got %d", 3, len(program.Statements))
+		t.Fatalf("expected %d statements, got=%d", 3, len(program.Statements))
 	}
 
 	for _, stmt := range program.Statements {
 		returnStmt, ok := stmt.(*ast.ReturnStatement)
 		if !ok {
-			t.Errorf("expected *ast.ReturnStatement, but got %T", returnStmt)
+			t.Errorf("expected *ast.ReturnStatement, but got=%T", returnStmt)
 		}
 
 		if returnStmt.TokenLiteral() != "return" {
-			t.Errorf("expected token literal 'return', but got %T", returnStmt.TokenLiteral())
+			t.Errorf("expected token literal 'return', but got=%T", returnStmt.TokenLiteral())
 		}
+	}
+}
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Errorf("expected %d statements but got=%d", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpresssionStatement)
+	if !ok {
+		t.Errorf("expected ast.ExpressionStatement but got=%T", program.Statements[0])
+	}
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Errorf("expected ast.Identifier but got=%T", stmt.Expression)
+	}
+
+	if ident.Value != "foobar" {
+		t.Errorf("expected value to be %q got=%q", "foobar", ident.Value)
+	}
+
+	if ident.TokenLiteral() != "foobar" {
+		t.Errorf("expected value to be %q got=%q", "foobar", ident.TokenLiteral())
 	}
 }
