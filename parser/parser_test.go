@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cijin/go-interpreter/ast"
@@ -44,6 +45,27 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error: %s", msg)
 	}
 	t.FailNow()
+}
+
+// Helper method
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	integ, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("expected *ast.IntegerLiteral, but got=%T", il)
+		return false
+	}
+
+	if integ.Value != value {
+		t.Errorf("expected value to be %d, got=%d", value, integ.Value)
+		return false
+	}
+
+	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("expected token literal to be %s, got=%s", fmt.Sprintf("%d", value), integ.TokenLiteral())
+		return false
+	}
+
+	return true
 }
 
 func TestLetStatements(t *testing.T) {
@@ -145,5 +167,28 @@ func TestIdentifierExpression(t *testing.T) {
 
 	if ident.TokenLiteral() != "foobar" {
 		t.Errorf("expected value to be %q got=%q", "foobar", ident.TokenLiteral())
+	}
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Errorf("expected %d statements got=%d", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpresssionStatement)
+	if !ok {
+		t.Errorf("expected ast.ExpressionStatement got=%T", program.Statements[0])
+	}
+
+	if !testIntegerLiteral(t, stmt.Expression, 5) {
+		return
 	}
 }
