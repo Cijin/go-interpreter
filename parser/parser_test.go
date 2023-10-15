@@ -80,6 +80,8 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected interface{
 	case string:
 		return testIdentifier(t, exp, v)
 
+	case bool:
+		return testBooleanLiteral(t, exp, v)
 	}
 
 	t.Errorf("exp type not handled, got=%T", exp)
@@ -130,6 +132,26 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 		return false
 	}
 
+	return true
+}
+
+// Helper
+func testBooleanLiteral(t *testing.T, bl ast.Expression, value bool) bool {
+	b, ok := bl.(*ast.Boolean)
+	if !ok {
+		t.Errorf("expected *ast.Boolean got=%T", bl)
+		return false
+	}
+
+	if b.Value != value {
+		t.Errorf("exptected value to be %t, got=%t", value, b.Value)
+		return false
+	}
+
+	if b.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf("expected token literal to be %s, got=%s", fmt.Sprintf("%t", value), b.TokenLiteral())
+		return false
+	}
 	return true
 }
 
@@ -249,14 +271,39 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestBooleanExpression(t *testing.T) {
+	input := "true;"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Errorf("expected %d statements got=%d", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpresssionStatement)
+	if !ok {
+		t.Errorf("expected ast.ExpressionStatement got=%T", program.Statements[0])
+	}
+
+	if !testBooleanLiteral(t, stmt.Expression, true) {
+		return
+	}
+}
+
 func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
 		operator string
-		intValue int64
+		value    interface{}
 	}{
 		{"!5", "!", 5},
 		{"-15", "-", 15},
+		{"!false", "!", false},
+		{"!true", "!", true},
 	}
 
 	for _, tt := range prefixTests {
@@ -283,7 +330,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 			t.Fatalf("exp.Operator is not '%s', got=%s", tt.operator, exp.Operator)
 		}
 
-		if !testIntegerLiteral(t, exp.Right, tt.intValue) {
+		if !testLiteralExpression(t, exp.Right, tt.value) {
 			return
 		}
 	}
@@ -292,9 +339,9 @@ func TestParsingPrefixExpressions(t *testing.T) {
 func TestParsingInfixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input      string
-		leftValue  int64
+		leftValue  interface{}
 		operator   string
-		rightValue int64
+		rightValue interface{}
 	}{
 		{"5 + 5;", 5, "+", 5},
 		{"5 - 5;", 5, "-", 5},
@@ -304,6 +351,9 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"5 > 5;", 5, ">", 5},
 		{"5 == 5;", 5, "==", 5},
 		{"5 != 5;", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"true != false", true, "!=", false},
+		{"false == false", false, "==", false},
 	}
 
 	for _, tt := range prefixTests {
@@ -375,6 +425,43 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
 			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+		{
+			"true",
+			"true",
+		},
+		{
+			"false",
+			"false",
+		},
+		{
+			"3 > 5 == false",
+			"((3 > 5) == false)",
+		},
+		{
+			"3 < 5 == true",
+			"((3 < 5) == true)",
+		},
+		// grouped expressions
+		{
+			"1 + (2 + 3) + 4",
+			"((1 + (2 + 3)) + 4)",
+		},
+		{
+			"(5 + 5) * 2",
+			"((5 + 5) * 2)",
+		},
+		{
+			"2 / (5 + 5)",
+			"(2 / (5 + 5))",
+		},
+		{
+			"-(5 + 5)",
+			"(-(5 + 5))",
+		},
+		{
+			"!(true == true)",
+			"(!(true == true))",
 		},
 	}
 
