@@ -88,7 +88,7 @@ func (ls *LetStatement) String() string {
 	buf.WriteString(" = ")
 
 	if ls.Value != nil {
-		buf.WriteString(ls.Value.TokenLiteral())
+		buf.WriteString(ls.Value.String())
 	}
 
 	buf.WriteString(";")
@@ -110,7 +110,7 @@ func (rs *ReturnStatement) String() string {
 	buf.WriteString(rs.TokenLiteral() + " ")
 
 	if rs.ReturnValue != nil {
-		buf.WriteString(rs.ReturnValue.TokenLiteral())
+		buf.WriteString(rs.ReturnValue.String())
 	}
 
 	buf.WriteString(";")
