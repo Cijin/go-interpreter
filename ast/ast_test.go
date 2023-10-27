@@ -27,12 +27,13 @@ func TestString(t *testing.T) {
 						Type:    token.IDENT,
 						Literal: "y",
 					},
+					Value: "y",
 				},
 			},
 		},
 	}
 
 	if program.String() != expected {
-		t.Errorf("Expected %s, got %s\n", expected, program.String())
+		t.Errorf("Expected %s, got='%s'\n", expected, program.String())
 	}
 }
