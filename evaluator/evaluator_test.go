@@ -29,16 +29,18 @@ func testIntegerObject(t *testing.T, obj object.Object, value int64) {
 
 func TestIntegerExpression(t *testing.T) {
 	tests := []struct {
-		in  string
-		out int64
+		in       string
+		expected int64
 	}{
 		{"5", 5},
 		{"10", 10},
+		{"-5", -5},
+		{"-10", -10},
 	}
 
 	for _, test := range tests {
 		evaluated := testEval(test.in)
-		testIntegerObject(t, evaluated, test.out)
+		testIntegerObject(t, evaluated, test.expected)
 	}
 }
 
@@ -55,8 +57,8 @@ func testBooleanObject(t *testing.T, obj object.Object, value bool) {
 
 func TestBooleanExpression(t *testing.T) {
 	tests := []struct {
-		in  string
-		out bool
+		in       string
+		expected bool
 	}{
 		{"true", true},
 		{"false", false},
@@ -64,6 +66,25 @@ func TestBooleanExpression(t *testing.T) {
 
 	for _, test := range tests {
 		evaluated := testEval(test.in)
-		testBooleanObject(t, evaluated, test.out)
+		testBooleanObject(t, evaluated, test.expected)
+	}
+}
+
+func TestBangPrefixExpressions(t *testing.T) {
+	tests := []struct {
+		in       string
+		expected bool
+	}{
+		{"!true", false},
+		{"!false", true},
+		{"!5", false},
+		{"!!true", true},
+		{"!!false", false},
+		{"!!5", true},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.in)
+		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
