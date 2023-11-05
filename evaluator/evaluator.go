@@ -12,11 +12,38 @@ var (
 	NULL  = &object.Null{}
 )
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalProgram(stmts []ast.Statement) object.Object {
 	var result object.Object
 
 	for _, stmt := range stmts {
 		result = Eval(stmt)
+
+		if r, ok := result.(*object.ReturnValue); ok {
+			return r.Value
+		}
+	}
+
+	return result
+}
+
+/*
+ * This method is seperated to ensure that the innermost block statement
+ * return gets returned and the execution stops. If you unwrap at the block
+ * statement level (return obj), execution keeps continuing as `evalProgram`
+ * executes the next statement.
+ *
+ * Prior to seperating evalBlockStatements & evalProgram, execution for statements
+ * was handled by a generic evalStatements
+ */
+func evalBlockStatements(stmts []ast.Statement) object.Object {
+	var result object.Object
+
+	for _, stmt := range stmts {
+		result = Eval(stmt)
+
+		if result != nil && result.Type() == object.RETURN_VALUE_OBJ {
+			return result
+		}
 	}
 
 	return result
@@ -140,7 +167,7 @@ func evalIfExpression(n *ast.IfExpression) object.Object {
 func Eval(node ast.Node) object.Object {
 	switch n := node.(type) {
 	case *ast.Program:
-		return evalStatements(n.Statements)
+		return evalProgram(n.Statements)
 
 	case *ast.ExpressionStatement:
 		return Eval(n.Expression)
@@ -165,10 +192,15 @@ func Eval(node ast.Node) object.Object {
 		return evalInfixExpression(n.Operator, left, right)
 
 	case *ast.BlockStatement:
-		return evalStatements(n.Statements)
+		return evalBlockStatements(n.Statements)
 
 	case *ast.IfExpression:
 		return evalIfExpression(n)
+
+	case *ast.ReturnStatement:
+		v := Eval(n.ReturnValue)
+		return &object.ReturnValue{Value: v}
+
 	}
 
 	return nil
