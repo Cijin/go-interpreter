@@ -178,3 +178,42 @@ func TestReturnStatements(t *testing.T) {
 		testIntegerObject(t, evaluated, int64(tt.expected))
 	}
 }
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		in       string
+		expected string
+	}{
+		{"true + 5", "type mismatch: BOOLEAN + INTEGER"},
+		{"5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"},
+		{"-true", "operator '-' not defined on BOOLEAN"},
+		{"true + false", "unknown operator: BOOLEAN + BOOLEAN"},
+		{"5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"},
+		{"if (10 > 1) { true + false; }", "unknown operator: BOOLEAN + BOOLEAN"},
+		{
+			`
+			if (10 > 1) {
+				if (10 > 1) {
+					return true + false;
+				}
+
+				return 1;
+			}
+			`,
+			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.in)
+
+		err, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("expected object.Error to be returned, got=%T", evaluated)
+		}
+
+		if err.Message != tt.expected {
+			t.Errorf("expected error to be %s, got=%s", err.Message, tt.expected)
+		}
+	}
+}
