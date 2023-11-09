@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/cijin/go-interpreter/evaluator"
 	"github.com/cijin/go-interpreter/lexer"
 	"github.com/cijin/go-interpreter/parser"
-	"github.com/cijin/go-interpreter/token"
 )
 
 const (
@@ -47,11 +47,10 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
-
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Fprintf(out, "%+v\n", tok)
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
 		}
 	}
 }
