@@ -53,3 +53,24 @@ type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
 func (n *Null) Inspect() string  { return "null" }
+
+// Enviornment
+type Enviornment struct {
+	store map[string]Object
+}
+
+func NewEnviornment() *Enviornment {
+	return &Enviornment{store: make(map[string]Object)}
+}
+
+func (e *Enviornment) Get(name string) (Object, bool) {
+	val, ok := e.store[name]
+
+	return val, ok
+}
+
+func (e *Enviornment) Set(name string, val Object) Object {
+	e.store[name] = val
+
+	return val
+}
