@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Print("Welcome to monkey v0.0.0\nPress ctrl-d to exit.\n")
+	fmt.Print("Welcome to monkey v0.0.1\nPress ctrl-d to exit.\n")
 
 	repl.Start(os.Stdin, os.Stdout)
 }
