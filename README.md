@@ -33,3 +33,18 @@ type mismatch: INTEGER + BOOLEAN
 >> 
 
 ```
+
+### v0.0.1
+
+The interpreter has been expteded to be able to evaluate `function` literals and `Call` expressions. 
+So you interpret inputs like this:
+
+```
+Welcome to monkey v0.0.1
+Press ctrl-d to exit.
+>> let newAdder = fn(x) { fn(y) { x + y } };
+>> let addTwo = newAdder(2)
+>> addTwo(3)
+5
+>> 
+```
