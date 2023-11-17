@@ -235,3 +235,45 @@ func TestLetStatement(t *testing.T) {
 		testIntegerObject(t, testEval(tt.in), tt.expected)
 	}
 }
+
+func TestFunctionObject(t *testing.T) {
+	input := "fn(x) { x + 5 }"
+	evaluated := testEval(input)
+
+	fn, ok := evaluated.(*object.Function)
+	if !ok {
+		t.Errorf("expected evaluated to be of *object.Function type, got=%T", evaluated)
+	}
+
+	if len(fn.Args) != 1 {
+		t.Errorf("expected 1 argument, got=%d", len(fn.Args))
+	}
+
+	if fn.Args[0].TokenLiteral() != "x" {
+		t.Errorf("expected arg to be 'x', got=%s", fn.Args[0].TokenLiteral())
+	}
+
+	expectedBody := "(x + 5)"
+	if fn.Body.String() != expectedBody {
+		t.Errorf("expected body to be %s, got=%s", expectedBody, fn.Body.String())
+	}
+}
+
+func TestFunctionCall(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let x = fn(y) { y }; x(5);", 5},
+		{"let x = fn(y) { return y }; x(5);", 5},
+		{"let double = fn(x) { return x * 2 }; double(5);", 10},
+		{"let add = fn(x, y) { return x + y }; add(5, 5);", 10},
+		{"let add = fn(x, y) { return x + y }; add(5, add(5, 5));", 15},
+		{"fn(x, y) { return x + y }(5, 5);", 10},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}

@@ -202,6 +202,50 @@ func evalIdentifier(ident *ast.Identifier, env *object.Enviornment) object.Objec
 	return i
 }
 
+func evalExpressions(exprs []ast.Expression, env *object.Enviornment) []object.Object {
+	var result []object.Object
+
+	for _, arg := range exprs {
+		evaluated := Eval(arg, env)
+		if isError(evaluated) {
+			return []object.Object{evaluated}
+		}
+
+		result = append(result, evaluated)
+	}
+
+	return result
+}
+
+func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Enviornment {
+	env := object.NewEnclosedEnviornment(fn.Env)
+
+	for i, argAst := range fn.Args {
+		env.Set(argAst.Value, args[i])
+	}
+
+	return env
+}
+
+func unwrapReturn(obj object.Object) object.Object {
+	if returnValue, ok := obj.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+
+	return obj
+}
+
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	function, ok := fn.(*object.Function)
+	if !ok {
+		return newErrorf("not a function: %s", fn.Type())
+	}
+
+	extendedEnv := extendFunctionEnv(function, args)
+	evaluated := Eval(function.Body, extendedEnv)
+	return unwrapReturn(evaluated)
+}
+
 func Eval(node ast.Node, env *object.Enviornment) object.Object {
 	switch n := node.(type) {
 	case *ast.Program:
@@ -262,6 +306,26 @@ func Eval(node ast.Node, env *object.Enviornment) object.Object {
 
 	case *ast.Identifier:
 		return evalIdentifier(n, env)
+
+	case *ast.FunctionLiteral:
+		args := n.Parameters
+		body := n.Body
+
+		// not sure about the evn
+		return &object.Function{Args: args, Body: body, Env: env}
+
+	case *ast.CallExpression:
+		fn := Eval(n.Function, env)
+		if isError(fn) {
+			return fn
+		}
+
+		args := evalExpressions(n.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+
+		return applyFunction(fn, args)
 	}
 
 	return nil
