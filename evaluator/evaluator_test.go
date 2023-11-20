@@ -277,3 +277,24 @@ func TestFunctionCall(t *testing.T) {
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
+
+func TestClosures(t *testing.T) {
+	input := `
+	let x = 10;
+	let y = 10;
+
+	let addTwo = fn(x) {
+		return fn(y) {
+			return x + y;
+		};
+	};
+
+	let add = addTwo(2);
+	add(4);
+	`
+
+	var expected int64 = 6
+
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, expected)
+}
