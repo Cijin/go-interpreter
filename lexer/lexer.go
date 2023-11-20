@@ -40,6 +40,22 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+func (l *Lexer) readString() string {
+	// current position on '"'
+	position := l.position + 1
+
+	// keep reading till '"' or null
+	for {
+		l.readChar()
+
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+
+	return l.input[position:l.position]
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -67,6 +83,10 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = newToken(token.BANG, l.ch)
 		}
+
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
 
 	case '<':
 		tok = newToken(token.LT, l.ch)
