@@ -210,7 +210,11 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {
-	// handle errors
+	if p.curToken.Error != nil {
+		p.errors = append(p.errors, p.curToken.Error.Error())
+		return nil
+	}
+
 	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 

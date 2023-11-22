@@ -202,31 +202,66 @@ func TestIntegerLiteralExpression(t *testing.T) {
 }
 
 func TestStringLiteralExpression(t *testing.T) {
-	input := `"hello world";`
-	expected := "hello world"
-
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
-
-	if len(program.Statements) != 1 {
-		t.Errorf("expected %d statements got=%d", 1, len(program.Statements))
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"hello world";`, "hello world"},
 	}
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Errorf("expected ast.ExpressionStatement got=%T", program.Statements[0])
+	for _, tc := range tests {
+		l := lexer.New(tc.input)
+		p := New(l)
+
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Errorf("expected %d statements got=%d", 1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("expected ast.ExpressionStatement got=%T", program.Statements[0])
+		}
+
+		literal, ok := stmt.Expression.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("expected ast.StringLiteral got=%T", stmt.Expression)
+		}
+
+		if literal.Value != tc.expected {
+			t.Errorf("expected string literal to be %s, got=%s", tc.expected, literal.Value)
+		}
+	}
+}
+
+func TestUnterminatedStringLiteral(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			`"hello
+			"world"`, // added '"' to start of string so as to not get 2 errors
+			"string literal not terminated",
+		},
+		{`"hello world`, "string literal not terminated"},
 	}
 
-	literal, ok := stmt.Expression.(*ast.StringLiteral)
-	if !ok {
-		t.Errorf("expected ast.StringLiteral got=%T", stmt.Expression)
-	}
+	for _, tc := range tests {
+		l := lexer.New(tc.input)
+		p := New(l)
 
-	if literal.Value != expected {
-		t.Errorf("expected string literal to be %s, got=%s", expected, literal.Value)
+		p.ParseProgram()
+		errors := p.Errors()
+		if len(errors) != 1 {
+			t.Errorf("expected 1 error, got=%d", len(errors))
+		}
+
+		if errors[0] != tc.expected {
+			t.Errorf("expected error to be %s, got=%s", tc.expected, errors[0])
+		}
 	}
 }
 

@@ -1,6 +1,10 @@
 package lexer
 
-import "github.com/cijin/go-interpreter/token"
+import (
+	"errors"
+
+	"github.com/cijin/go-interpreter/token"
+)
 
 type Lexer struct {
 	input        string
@@ -40,7 +44,7 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) readString() string {
+func (l *Lexer) readString() (string, error) {
 	// current position on '"'
 	position := l.position + 1
 
@@ -48,14 +52,19 @@ func (l *Lexer) readString() string {
 	for {
 		l.readChar()
 
-		// reaching null should return error
-		// Handle: \n, \t, \r, \ inside ""
-		if l.ch == '"' || l.ch == 0 {
+		if l.ch == 0 || l.ch == '\n' {
+			return "", errors.New("string literal not terminated")
+		}
+
+		if l.ch == '"' {
 			break
 		}
+
+		// escape '"', not sure how to do this yet
+		// if l.ch == '\'
 	}
 
-	return l.input[position:l.position]
+	return l.input[position:l.position], nil
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -88,7 +97,7 @@ func (l *Lexer) NextToken() token.Token {
 
 	case '"':
 		tok.Type = token.STRING
-		tok.Literal = l.readString()
+		tok.Literal, tok.Error = l.readString()
 
 	case '<':
 		tok = newToken(token.LT, l.ch)
