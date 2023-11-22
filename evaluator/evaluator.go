@@ -259,6 +259,11 @@ func Eval(node ast.Node, env *object.Enviornment) object.Object {
 			Value: n.Value,
 		}
 
+	case *ast.StringLiteral:
+		return &object.String{
+			Value: n.Value,
+		}
+
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(n.Value)
 

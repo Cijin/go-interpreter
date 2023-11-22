@@ -65,6 +65,20 @@ func TestIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	input := `"hello world"`
+	evaluated := testEval(input)
+
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Errorf("expected object.String, got=%T", evaluated)
+	}
+
+	if str.Value != "hello world" {
+		t.Errorf("expected value to be 'hello world', got=%s", str.Value)
+	}
+}
+
 func testBooleanObject(t *testing.T, obj object.Object, value bool) {
 	o, ok := obj.(*object.Boolean)
 	if !ok {

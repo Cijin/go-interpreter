@@ -61,6 +61,7 @@ func (l *Lexer) readString() (string, error) {
 		}
 
 		// escape '"', not sure how to do this yet
+		// also look into \n, \r, \t
 		// if l.ch == '\'
 	}
 
