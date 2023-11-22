@@ -44,10 +44,12 @@ func (l *Lexer) readString() string {
 	// current position on '"'
 	position := l.position + 1
 
-	// keep reading till '"' or null
+	// keep reading till '"'
 	for {
 		l.readChar()
 
+		// reaching null should return error
+		// Handle: \n, \t, \r, \ inside ""
 		if l.ch == '"' || l.ch == 0 {
 			break
 		}

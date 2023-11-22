@@ -53,11 +53,6 @@ func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
 
-type IntegerLiteral struct {
-	Token token.Token
-	Value int64
-}
-
 type Boolean struct {
 	Token token.Token
 	Value bool
@@ -67,9 +62,23 @@ func (b *Boolean) expressionNode()      {}
 func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
 func (b *Boolean) String() string       { return b.Token.Literal }
 
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
 func (i *IntegerLiteral) expressionNode()      {}
 func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
 func (i *IntegerLiteral) String() string       { return i.Token.Literal }
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (i *StringLiteral) expressionNode()      {}
+func (i *StringLiteral) TokenLiteral() string { return i.Token.Literal }
+func (i *StringLiteral) String() string       { return i.Token.Literal }
 
 // Let
 type LetStatement struct {
