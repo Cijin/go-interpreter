@@ -159,7 +159,7 @@ func evalStringInfixExpression(operator string, left, right object.Object) objec
 		return nativeBoolToBooleanObject(leftValue != rightValue)
 
 	default:
-		return newErrorf("operartor %s, not supported on type %T", operator, left)
+		return newErrorf("operartor %s not supported on type string", operator)
 	}
 }
 

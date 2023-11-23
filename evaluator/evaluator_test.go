@@ -243,6 +243,7 @@ func TestErrorHandling(t *testing.T) {
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{"foobar", "identifier is undefined: foobar"},
+		{`"hello" - "world"`, "operartor - not supported on type string"},
 	}
 
 	for _, tt := range tests {
