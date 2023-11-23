@@ -48,3 +48,8 @@ Press ctrl-d to exit.
 5
 >> 
 ```
+
+### v0.0.2
+
+Strings and their evaluation is now supported. Might be buggy as `\n`, `\r`, `\`, & `\t` are not supported yet.
+Although operators: `+`, `==`, && `!=` now work on string expressions too.
