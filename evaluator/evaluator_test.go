@@ -71,11 +71,34 @@ func TestStringLiteral(t *testing.T) {
 
 	str, ok := evaluated.(*object.String)
 	if !ok {
-		t.Errorf("expected object.String, got=%T", evaluated)
+		t.Errorf("expected *object.String, got=%T", evaluated)
 	}
 
 	if str.Value != "hello world" {
 		t.Errorf("expected value to be 'hello world', got=%s", str.Value)
+	}
+}
+
+func TestStringExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"hello" + "world";`, "helloworld"},
+		{`"hello" + " "  + "world";`, "hello world"},
+	}
+
+	for i, tc := range tests {
+		evaluated := testEval(tc.input)
+
+		str, ok := evaluated.(*object.String)
+		if !ok {
+			t.Errorf("[tc %d]:expected *object.String, got=%T", i, evaluated)
+		}
+
+		if str.Value != tc.expected {
+			t.Errorf("[tc %d]:expected %s, got=%s", i, tc.expected, tc.input)
+		}
 	}
 }
 
@@ -114,6 +137,8 @@ func TestBooleanExpression(t *testing.T) {
 		{"(1 < 2) == false", false},
 		{"(1 > 2) == true", false},
 		{"(1 > 2) == false", true},
+		{`"hello" == "world"`, false},
+		{`"hello" == "hello"`, true},
 	}
 
 	for _, test := range tests {
