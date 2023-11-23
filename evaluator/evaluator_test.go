@@ -338,3 +338,35 @@ func TestClosures(t *testing.T) {
 	evaluated := testEval(input)
 	testIntegerObject(t, evaluated, expected)
 }
+
+func TestBuiltinFunction(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`len("hello")`, 5},
+		{`len("hello world")`, 11},
+		{`len("1")`, 1},
+		{`len("")`, 0},
+		{`len(1)`, "invalid arg type for len, expected=STRING, got=INTEGER"},
+		{`len("one", "two")`, "too many args for len, expected=1, got=2"},
+	}
+
+	for i, tc := range tests {
+		evaluated := testEval(tc.input)
+
+		switch expected := tc.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			err, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("[tc %d]: expected evaluated to be *object.Error, got=%T (+%v)", i, evaluated, evaluated)
+			}
+
+			if err.Message != expected {
+				t.Errorf("[tc %d]: expected error=%s, got=%s", i, expected, err.Message)
+			}
+		}
+	}
+}

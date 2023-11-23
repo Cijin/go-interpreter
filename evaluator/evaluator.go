@@ -14,6 +14,24 @@ var (
 	NULL  = &object.Null{}
 )
 
+var builtins = map[string]*object.Builtin{
+	"len": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return &object.Error{Message: fmt.Sprintf("too many args for len, expected=1, got=%d", len(args))}
+			}
+
+			switch a := args[0].(type) {
+			case *object.String:
+				return &object.Integer{Value: int64(len(a.Value))}
+
+			default:
+				return &object.Error{Message: fmt.Sprintf("invalid arg type for len, expected=STRING, got=%s", a.Type())}
+			}
+		},
+	},
+}
+
 func newErrorf(format string, a ...interface{}) *object.Error {
 	return &object.Error{
 		Message: fmt.Sprintf(format, a...),
@@ -215,11 +233,16 @@ func evalIfExpression(n *ast.IfExpression, env *object.Enviornment) object.Objec
 
 func evalIdentifier(ident *ast.Identifier, env *object.Enviornment) object.Object {
 	i, ok := env.Get(ident.Value)
-	if !ok {
-		return newErrorf("identifier is undefined: %s", ident.Value)
+	if ok {
+		return i
 	}
 
-	return i
+	i, ok = builtins[ident.Value]
+	if ok {
+		return i
+	}
+
+	return newErrorf("identifier is undefined: %s", ident.Value)
 }
 
 func evalExpressions(exprs []ast.Expression, env *object.Enviornment) []object.Object {
@@ -257,13 +280,18 @@ func unwrapReturn(obj object.Object) object.Object {
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	function, ok := fn.(*object.Function)
-	if !ok {
-		return newErrorf("not a function: %s", fn.Type())
+	if ok {
+		extendedEnv := extendFunctionEnv(function, args)
+		evaluated := Eval(function.Body, extendedEnv)
+		return unwrapReturn(evaluated)
 	}
 
-	extendedEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-	return unwrapReturn(evaluated)
+	builtin, ok := fn.(*object.Builtin)
+	if ok {
+		return builtin.Fn(args...)
+	}
+
+	return newErrorf("not a function: %s", fn.Type())
 }
 
 func Eval(node ast.Node, env *object.Enviornment) object.Object {
